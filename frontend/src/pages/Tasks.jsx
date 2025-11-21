@@ -238,6 +238,8 @@ const Tasks = () => {
       setIsLoading(true);
       const response = await api.put(`/tasks/${taskId}/status`, { status });
       setSuccess(response.data.message);
+      setShowTaskDetailModal(false); // Close modal immediately
+      setSelectedTask(null); // Clear selected task
       fetchTasks();
     } catch (err) {
       console.error('Update task status error:', err);
@@ -574,6 +576,11 @@ const Tasks = () => {
                   const currentAssigneeCount = task.assignees?.length || 0;
                   const isAdmin = selectedCommunity?.UserCommunity?.role === 'community_admin' || user?.role === 'platform_admin';
                   
+                  // Get assignment status - check multiple possible paths
+                  const assignmentStatus = userAssignment?.TaskAssignment?.status || 
+                                          userAssignment?.status || 
+                                          (task.task_type === 'individual' ? task.status : null);
+                  
                   return (
                     <div 
                       key={task.task_id} 
@@ -624,7 +631,7 @@ const Tasks = () => {
 
                       {/* Action buttons */}
                       <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                        {isAssignedToUser && !['completed', 'submitted'].includes(task.status) && (
+                        {isAssignedToUser && assignmentStatus && !['accepted', 'completed', 'submitted', 'rejected'].includes(assignmentStatus) && (
                           <button
                             onClick={() => handleRevokeTask(task.task_id)}
                             className="flex-1 px-3 py-1 text-sm bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-medium transition-colors"
@@ -1385,6 +1392,12 @@ const Tasks = () => {
                         const userAssignment = selectedTask.assignees?.find(a => a.user_id === user.user_id);
                         const isAssignedToUser = !!userAssignment;
                         const currentAssigneeCount = selectedTask.assignees?.length || 0;
+                        
+                        // Get assignment status - check multiple possible paths
+                        const assignmentStatus = userAssignment?.TaskAssignment?.status || 
+                                                userAssignment?.status || 
+                                                (selectedTask.task_type === 'individual' ? selectedTask.status : null);
+                        
                         // Allow self-assignment for group tasks even when status is 'submitted' if slots available
                         const allowedStatuses = selectedTask.task_type === 'group' 
                           ? ['not_started', 'in_progress', 'submitted']
@@ -1460,7 +1473,7 @@ const Tasks = () => {
                               </button>
                             )}
 
-                            {isAssignedToUser && !['completed', 'submitted'].includes(selectedTask.status) && (
+                            {isAssignedToUser && assignmentStatus && !['accepted', 'completed', 'submitted', 'rejected'].includes(assignmentStatus) && (
                               <button
                                 onClick={() => {
                                   handleRevokeTask(selectedTask.task_id);
