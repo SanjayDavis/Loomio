@@ -19,7 +19,7 @@ A comprehensive full-stack application for managing community tasks, events, att
 - **Community Admin**: Community-specific management and member oversight
 - **Member**: Task participation and contribution tracking
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Backend
 - **Node.js** with Express.js
